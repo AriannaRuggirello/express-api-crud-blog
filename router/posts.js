@@ -12,10 +12,13 @@ const homecontroller = require('../controller/home');
 router.get('/', homecontroller.index);
 // create
 router.get('/create', homecontroller.create);
-// store
-router.post('/',homecontroller.store);
+
 // show
 router.get('/:slug', homecontroller.show);
+// store
+router.post('/',homecontroller.store);
+// destroy
+router.delete("/:slug", homecontroller.destroy)
 
 // download image
 router.get('/:slug/download', homecontroller.downloadImage);

@@ -78,7 +78,7 @@ function create(req, res) {
     res.format({
         html: ()=>{
             console.log('Reindirizzamento HTML a /');
-            res.redirect('/posts/');
+            res.redirect(`${req.protocol}://${req.hostname}:${process.env.PORT}/posts`);
           
         },
     
@@ -140,7 +140,42 @@ function show(req, res) {
     res.json(post);
   }
 
+  
+  /**
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ */
 
+  function destroy(req, res) {
+    res.format({
+        html: ()=>{
+            // res.redirect('http://localhost:3000/posts');
+            res.redirect(`${req.protocol}://${req.hostname}:${process.env.PORT}/posts`);
+        },
+        default: ()=>{
+            const post = findOrFail(req, res);
+
+        // Leggo il DB
+        const listaPost = require("../db/db.json");
+
+        // Trovo lo slug del post da eliminare
+        const postIndex = listaPost.findIndex((_p) => _post.id === p.id);
+
+        if (postIndex === -1) {
+            res.status(404).send(`Post con id ${post.id} non trovato nell'array`);
+            return;
+        }
+
+        // Rimuovo il post dall'array
+        listaPost.splice(postIndex, 1);
+
+        // Converto il DB in JSON
+        const json = JSON.stringify(listaPost, null, 2);
+
+        res.send('post eliminato correttamente')
+        }
+    });
+}
 
 /**
  * @param {express.Request} req 
@@ -176,12 +211,27 @@ function downloadImage(req, res) {
     res.download(imagePath);
 }
 
-
+const findOrFail = (req, res) => {
+    // recupero lo slug dalla richiesta
+    const postId = req.params.id;
+  
+    // recupero il post dall'array
+    const post = posts.find((post) => post.id === postId);
+  
+    // Nel caso in cui non sia stata trovata la pizza ritorno un 404
+    if (!post) {
+      res.status(404).send(`Post con id ${postId} non trovato`);
+      return; // interrompo l'esecuzione della funzione
+    }
+  
+    return post;
+  };
 // esporto 
 module.exports={
     index,
     create,
-    store,
     show,
+    store,
+    destroy,
     downloadImage
 }
