@@ -3,8 +3,10 @@ const express= require('express');
 // importo json
 const posts = require('../db/db.json')
 
+
 const path = require("path");
 const fs = require("fs");
+const { kebabCase } = require("lodash");
 
 /**
  * @param {express.Request} req 
@@ -47,6 +49,77 @@ function index(req,res){
 
 }
 
+
+  /**
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ */
+
+function create(req, res) {
+    res.format({
+        html: function(){
+            return res.type("html").send("<h1>Creazione nuovo post</h1>");
+        },
+        default: function(){
+            if (!req.get('Accept') || !req.get('Accept').includes('html')) {
+                res.status(406).send("Not Acceptable");
+            }
+        }
+    });
+}
+
+
+  /**
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ */
+  function store(req, res) {
+  
+    res.format({
+        html: ()=>{
+            console.log('Reindirizzamento HTML a /');
+            res.redirect('/posts/');
+          
+        },
+    
+        default: ()=> {
+            res.type("json");
+
+            // leggo il DB
+            const postsDb = require('../db/db.json');
+
+            // recupero gli id delle pizze
+         /**
+         * @type {number[]}
+         */
+            let idList =postsDb.map((post)=>post.id);
+
+            // ordino gli id in ordine decrescente
+            idList.sort((a,b)=>b-a);
+
+            // aggiungo la pizza al DB
+            postsDb.push({
+                ...req.body,
+                id: idList[0]+1,
+                slug: kebabCase(req.body.title),
+            });
+
+            // converto il DB in JSON
+            const json = JSON.stringify(postsDb,null,2);
+
+            // scrivo il JSON su file
+            fs.writeFileSync(path.resolve(__dirname, "..", "db", "db.json"), json);
+
+            res.json(postsDb[postsDb.length-1]);
+
+        },
+        
+    });
+//     console.log(req.body);
+//   //   console.log(req.query);
+//       res.send('ok')
+}
+
 /**
  * @param {express.Request} req 
  * @param {express.Response} res 
@@ -67,23 +140,6 @@ function show(req, res) {
     res.json(post);
   }
 
-
-  /**
- * @param {express.Request} req 
- * @param {express.Response} res 
- */
-  function create(req, res) {
-    res.format({
-        html: function(){
-            return res.type("html").send("<h1>Creazione nuovo post</h1>");
-        },
-        default: function(){
-            if (!req.get('Accept') || !req.get('Accept').includes('html')) {
-                res.status(406).send("Not Acceptable");
-            }
-        }
-    });
-}
 
 
 /**
@@ -124,7 +180,8 @@ function downloadImage(req, res) {
 // esporto 
 module.exports={
     index,
-    show,
     create,
+    store,
+    show,
     downloadImage
 }
