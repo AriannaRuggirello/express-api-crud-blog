@@ -2,123 +2,126 @@
 const express= require('express');
 // importo json
 const posts = require('../db/db.json')
-
-
 const path = require("path");
 const fs = require("fs");
 const { kebabCase } = require("lodash");
 
-/**
- * @param {express.Request} req 
- * @param {express.Response} res 
- */
-// rotta index
-function index(req,res){
-    res.type('html')
-    
-    // Creo una pagina HTML con i post
-    const html = [
-        '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">',
-        '<h1>benvenuto!</h1>',
-        '<div class="row justify-content-between">'
-    ];
 
-    // Aggiungi i post alla pagina HTML
-    for (const post of posts) {
-        html.push(`
-            <div class="col">
-                <div class="card" style="width: 250px;">
-                <img src="/imgs/posts/${post.image}" alt="">
-                  
-                    <h5 class="card-title">${post.title}</h5>
-                    
-                    <div class="card-body">
-                    <a class="card-title"> #${post.tags}</a>
-                    </div>
-                </div>
-            </div>
-        `);
-    }
-
-    html.push('</div>');
-
-    // Invia la pagina HTML al client
-    res.send(html.join(''));
-  
-      
-
-}
-
-
-  /**
- * @param {express.Request} req 
- * @param {express.Response} res 
- */
-
-function create(req, res) {
-    res.format({
-        html: function(){
-            return res.type("html").send("<h1>Creazione nuovo post</h1>");
-        },
-        default: function(){
-            if (!req.get('Accept') || !req.get('Accept').includes('html')) {
-                res.status(406).send("Not Acceptable");
-            }
-        }
-    });
-}
-
-
-  /**
- * @param {express.Request} req 
- * @param {express.Response} res 
- */
-  function store(req, res) {
-  
-    res.format({
-        html: ()=>{
-            console.log('Reindirizzamento HTML a /');
-            res.redirect(`${req.protocol}://${req.hostname}:${process.env.PORT}/posts`);
-          
-        },
-    
-        default: ()=> {
-            res.type("json");
-
-            // leggo il DB
-            const postsDb = require('../db/db.json');
-
-            // recupero gli id delle pizze
-         /**
-         * @type {number[]}
+        /**
+         * @param {express.Request} req 
+         * @param {express.Response} res 
          */
-            let idList =postsDb.map((post)=>post.id);
+        // rotta index
+        function index(req,res){
+            res.type('html')
+            
+            // Creo una pagina HTML con i post
+            const html = [
+                '<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">',
+                '<h1>benvenuto!</h1>',
+                '<div class="row justify-content-between">'
+            ];
 
-            // ordino gli id in ordine decrescente
-            idList.sort((a,b)=>b-a);
+            // Aggiungi i post alla pagina HTML
+            for (const post of posts) {
+                html.push(`
+                    <div class="col">
+                        <div class="card" style="width: 250px;">
+                        <img src="/imgs/posts/${post.image}" alt="">
+                        
+                            <h5 class="card-title">${post.title}</h5>
+                            
+                            <div class="card-body">
+                            <a class="card-title"> #${post.tags}</a>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
 
-            // aggiungo la pizza al DB
-            postsDb.push({
-                ...req.body,
-                id: idList[0]+1,
-                slug: kebabCase(req.body.title),
-            });
+            html.push('</div>');
 
-            // converto il DB in JSON
-            const json = JSON.stringify(postsDb,null,2);
-
-            // scrivo il JSON su file
-            fs.writeFileSync(path.resolve(__dirname, "..", "db", "db.json"), json);
-
-            res.json(postsDb[postsDb.length-1]);
-
-        },
+            // Invia la pagina HTML al client
+            res.send(html.join(''));
         
-    });
-//     console.log(req.body);
-//   //   console.log(req.query);
-//       res.send('ok')
-}
+            
+
+        }
+
+
+        /**
+         * @param {express.Request} req 
+         * @param {express.Response} res 
+         */
+
+        function create(req, res) {
+            res.format({
+                html: function(){
+                    return res.type("html").send("<h1>Creazione nuovo post</h1>");
+                },
+                default: function(){
+                    if (!req.get('Accept') || !req.get('Accept').includes('html')) {
+                        res.status(406).send("Not Acceptable");
+                    }
+                }
+            });
+        }
+
+
+        /**
+         * @param {express.Request} req 
+         * @param {express.Response} res 
+         */
+        function store(req, res) {
+        
+            res.format({
+                html: ()=>{
+                    console.log('Reindirizzamento HTML a /');
+                    res.redirect(`${req.protocol}://${req.hostname}:${process.env.PORT}/posts`);
+                
+                },
+            
+                default: ()=> {
+                    res.type("json");
+
+                    // leggo il DB
+                    const postsDb = require('../db/db.json');
+
+                    // recupero gli id delle pizze
+                /**
+                 * @type {number[]}
+                 */
+                    let idList =postsDb.map((post)=>post.id);
+
+                    // ordino gli id in ordine decrescente
+                    idList.sort((a,b)=>b-a);
+
+                    // aggiungo la pizza al DB
+                    postsDb.push({
+                        ...req.body,
+                        id: idList[0]+1,
+                        slug: kebabCase(req.body.title),
+                    });
+
+                    // converto il DB in JSON
+                    const json = JSON.stringify(postsDb,null,2);
+
+                    // scrivo il JSON su file
+                    fs.writeFileSync(path.resolve(__dirname, "..", "db", "db.json"), json);
+
+                    res.json(postsDb[postsDb.length-1]);
+
+                },
+                
+            });
+        //     console.log(req.body);
+        //   //   console.log(req.query);
+        //       res.send('ok')
+        }
+
+  
+
+
 
 /**
  * @param {express.Request} req 
@@ -140,42 +143,6 @@ function show(req, res) {
     res.json(post);
   }
 
-  
-  /**
- * @param {express.Request} req 
- * @param {express.Response} res 
- */
-
-  function destroy(req, res) {
-    res.format({
-        html: ()=>{
-            // res.redirect('http://localhost:3000/posts');
-            res.redirect(`${req.protocol}://${req.hostname}:${process.env.PORT}/posts`);
-        },
-        default: ()=>{
-            const post = findOrFail(req, res);
-
-        // Leggo il DB
-        const listaPost = require("../db/db.json");
-
-        // Trovo lo slug del post da eliminare
-        const postIndex = listaPost.findIndex((_p) => _post.id === p.id);
-
-        if (postIndex === -1) {
-            res.status(404).send(`Post con id ${post.id} non trovato nell'array`);
-            return;
-        }
-
-        // Rimuovo il post dall'array
-        listaPost.splice(postIndex, 1);
-
-        // Converto il DB in JSON
-        const json = JSON.stringify(listaPost, null, 2);
-
-        res.send('post eliminato correttamente')
-        }
-    });
-}
 
 /**
  * @param {express.Request} req 
@@ -211,6 +178,49 @@ function downloadImage(req, res) {
     res.download(imagePath);
 }
 
+
+  /**
+ * @param {express.Request} req 
+ * @param {express.Response} res 
+ */
+
+  function destroy(req, res) {
+    res.format({
+        html: ()=>{
+            // res.redirect('http://localhost:3000/posts');
+            res.redirect(`${req.protocol}://${req.hostname}:${process.env.PORT}/posts`);
+        },
+        default: ()=>{
+            const post = findOrFail(req, res);
+
+            // Leggo il DB
+            const listaPosts = require("../db/db.json");
+
+            // trovo l'indice del post da eliminare
+            const postIndex = listaPosts.findIndex((post) => post.id == post.id);
+
+            // rimuovo il post dall'array
+            listaPosts.splice(postIndex, 1);
+
+            // converto il DB in JSON
+            const json = JSON.stringify(listaPosts, null, 2);
+
+
+            // scrivo il JSON su file
+            fs.writeFileSync(path.resolve(__dirname, "..", "db", "db.json"), json);
+            
+            if (!post) {
+                res.status(404).send(`Post non trovato`);
+                return;
+            }
+
+
+            res.send("post eliminato correttamente");
+        }
+    });
+}
+
+// altre function
 const findOrFail = (req, res) => {
     // recupero lo slug dalla richiesta
     const postId = req.params.id;
@@ -230,8 +240,8 @@ const findOrFail = (req, res) => {
 module.exports={
     index,
     create,
-    show,
     store,
-    destroy,
-    downloadImage
+    show,
+    downloadImage,
+    destroy
 }

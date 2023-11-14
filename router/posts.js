@@ -7,14 +7,14 @@ const router= express.Router();
 // importo il controller
 const homecontroller = require('../controller/home');
 
-// index
 // definizione rotte 
+// index
 router.get('/', homecontroller.index);
-// create
-router.get('/create', homecontroller.create);
 
 // show
 router.get('/:slug', homecontroller.show);
+// create
+router.get('/create', homecontroller.create);
 // store
 router.post('/',homecontroller.store);
 // destroy
