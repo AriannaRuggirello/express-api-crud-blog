@@ -183,59 +183,69 @@ function downloadImage(req, res) {
  * @param {express.Request} req 
  * @param {express.Response} res 
  */
-
   function destroy(req, res) {
+    const postSlug = req.params.slug;
+    const foundPost = findOrFail(postSlug, res);
+  
+    // Se il post non è stato trovato, la funzione findOrFail ha già gestito la risposta
+    if (!foundPost) {
+      return;
+    }
+  
+    // Leggi il DB
+    const listaPosts = require("../db/db.json");
+  
+    // Trova l'indice del post da eliminare
+    const postIndex = listaPosts.findIndex((post) => post.slug === postSlug);
+  
+    // Se non trovi il post, restituisci uno stato 404
+    if (postIndex === -1) {
+      res.status(404).send(`Post con slug ${postSlug} non trovato`);
+      return;
+    }
+  
+    // Rimuovi il post dall'array
+    listaPosts.splice(postIndex, 1);
+  
+    // Converte il DB in JSON
+    const json = JSON.stringify(listaPosts, null, 2);
+  
+    // Scrivi il JSON su file
+    fs.writeFileSync(path.resolve(__dirname, "..", "db", "db.json"), json);
+  
+    // Rispondi alla richiesta
     res.format({
-        html: ()=>{
-            // res.redirect('http://localhost:3000/posts');
-            res.redirect(`${req.protocol}://${req.hostname}:${process.env.PORT}/posts`);
-        },
-        default: ()=>{
-            const post = findOrFail(req, res);
-
-            // Leggo il DB
-            const listaPosts = require("../db/db.json");
-
-            // trovo l'indice del post da eliminare
-            const postIndex = listaPosts.findIndex((post) => post.id == post.id);
-
-            // rimuovo il post dall'array
-            listaPosts.splice(postIndex, 1);
-
-            // converto il DB in JSON
-            const json = JSON.stringify(listaPosts, null, 2);
-
-
-            // scrivo il JSON su file
-            fs.writeFileSync(path.resolve(__dirname, "..", "db", "db.json"), json);
-            
-            if (!post) {
-                res.status(404).send(`Post non trovato`);
-                return;
-            }
-
-
-            res.send("post eliminato correttamente");
-        }
+      html: () => {
+        // Se la richiesta è di tipo HTML, reindirizza a un'altra pagina
+        res.redirect(`${req.protocol}://${req.hostname}:${process.env.PORT}/posts`);
+      },
+      default: () => {
+        // Altrimenti, se la richiesta è di un altro tipo, invia la risposta JSON solo qui
+        res.send("Post eliminato correttamente");
+      }
     });
-}
+  }
+  
+  
+  
+  
+  
+
 
 // altre function
-const findOrFail = (req, res) => {
-    // recupero lo slug dalla richiesta
-    const postId = req.params.id;
-  
+const findOrFail = (postSlug, res) => {
     // recupero il post dall'array
-    const post = posts.find((post) => post.id === postId);
+    const post = posts.find((post) => post.slug === postSlug);
   
     // Nel caso in cui non sia stata trovata la pizza ritorno un 404
     if (!post) {
-      res.status(404).send(`Post con id ${postId} non trovato`);
-      return; // interrompo l'esecuzione della funzione
+      res.status(404).send(`Post con slug ${postSlug} non trovato`);
+      return null; // restituisci null invece di interrompere l'esecuzione della funzione
     }
   
     return post;
   };
+  
 // esporto 
 module.exports={
     index,
